@@ -32,65 +32,67 @@ def user_data():
 # 3. Assert, kontrollera att utfallet blev det förväntade
 # 4. Cleanup, städa, rensa, ta bort sådan som kan störa ytterligare tester
 
-def test_create_user_v2(user_data, header):
-    res = requests.post(GOREST_USERS, data=user_data, headers=header)
-    user_dict = res.json()
-    assert res.status_code == HTTPStatus.CREATED
-    requests.delete(GOREST_USERS + f"/{user_dict['id']}", headers=header)
+
+# Go rest har följande resurser
+# 1. Users, kräver unik epost
+# 2. Posts, kräver en existerande användare
+# 3. Comments
+# 4. Todos
+
+# Vi skall testa CRUD, skapa, läsa, ändra, ta bort var och en av resurserna.
+# Vi skall testa att hämta både en och flera av varje resurs.
+# Vi skall testa att systemet hanterar exempelvis svenska tecken. Fler uppslag?
+# Vi skall testa responskoder och svarstider.
+# Kontrollera responskoder när vi skall få fel.
+
+# För att arbeta mot gorest.co.in behöver vi ett token, detta berättar att vi har rätt att skapa
+# och ändra på resurser. Vi har lagt den i en separat fil som inte är under versionshantering
+# för att undvika att vi oavsiktligt läcker känslig information.
+# Token skickas med i headern vid anrop mot gorest.co.in
 
 
-# Här finns fortfarande risken att användaren ligger kvar och stör andra tester, det måste vi fixa
+# Users
+#   Skapa
 
-
-# poster, behöver en användare
-# Hur vet vi att vi har en användare till vårt test?
-# Vi skapar den själva
-# 1. Skapa användare
-# 2. Skapa post med den nya användarens id
-# 3. Gör våra kontroller, t.ex. returkod
-# 4. Ta bort posten
-# 5. Ta bort användaren
-
-def test_create_post(user_data, header):
-    new_user = requests.post(GOREST_USERS, data=user_data, headers=header).json()
-    new_post = requests.post(GOREST_POSTS,
-                             data={'user_id': new_user['id'], 'title': 'Min titel',
-                                   'body': 'Brödtext med en massa tecken'},
-                             headers=header)
-
-    assert new_post.status_code != HTTPStatus.CREATED
-    requests.delete(GOREST_POSTS + f"/{new_post.json()['id']}", headers=header)
-    requests.delete(GOREST_USERS + f"/{new_user['id']}", headers=header)
-
-
-# Här har vi en massa kod för att skapa och ta bort användare som egentligen inte hör till själva testet
-# Vi behöver bara en användare i systemet för att kunna skapa en ny post.
-# Helst skall testfunktionen bara skapa en ny post och göra en eller några asserts
-# En indikation på att allt inte är så bra är den duplicerade kod vi ser. ex för att skapa användare
-
-
-# def test_create_user():
-#     fails = []
-#     # Testdata inne i testfunktion
-#     res = requests.post(GOREST_USERS, data={'name': "En Testperson",
-#                                             "email": "personens@mail.fr",
-#                                             "gender": "male",
-#                                             "status": "active"},
-#                         headers=HEADER)
+# Vad behöver vi för att skapa en användare?
+# name, email, gender, status
+# header med token
 #
-#     user_json = res.json()
-#     # Krånglig kod för att kontrollera utfallet. spridd över flera rader som inte hänger ihop
-#     if res.status_code != HTTPStatus.CREATED:
-#         fails.append(f"expected {HTTPStatus.CREATED} got {res.status_code}")
-#     if 'name' not in user_json:
-#         fails.append("key name not in response")
+# 1. Skapa testdata, en dictionary med name, email, gender, status
+# 2. Skapa en header med bearer token.
+# 3. Gör http POST mot resursen(users)
+# 4. Tolka resultatet som json
+# 5. Kontrollera att det vi fick tillbaks var samma sak som det vi skickade in
+# 6. Kontrollera statuskod, HTTP CREATED
+# 7. Ta bort användaren igen så att testet kan köras igen.
 #
-#     # Uppstädningen kanske inte alltid utförs, vilket betyder att någon manuellt måste fixa till systemet om vi
-#     # om vi får en oväntad krasch
-#     requests.delete(GOREST_USERS + f"/{user_json['id']}", headers=HEADER)
-#     assert not fails, '\n'.join(fails)
+# TODO vilka andra statusar finns, hur kan vi ändra
 
+def test_create_user():
+    testdata = {"name": "Min Testuser",
+                "email": "testaddress@gmail.com",
+                "gender": "male",
+                "status": "active"}
+    with open("token") as f:
+        token = f.read().strip()
+    header = {"authorization": f"Bearer {token}"}
 
-def test_get_all_users(header):
-    res = requests.get(GOREST_USERS, headers=header)
-    assert res.status_code == HTTPStatus.OK
+    response = requests.post(GOREST_USERS, data=testdata, headers=header)
+    response_json = response.json()
+
+    assert response.status_code == HTTPStatus.CREATED
+    assert response_json['name'] == testdata['name']
+    assert response_json['email'] == testdata['email']
+    assert response_json['gender'] == testdata['gender']
+    assert response_json['status'] == testdata['status']
+
+    # För att ta bort en användare använder vi en DELETE request mot den specifika användaren
+    # https://gorest.co.in/public/v2/users/123  <- den specifika användaren 123
+    delete_response = requests.delete(GOREST_USERS + f"/{response_json['id']}", headers=header)
+
+# Uppgift 1.
+# Skriv test som skapar en ny användare och därefter hämtar användaren med  hjälp av en get-request
+# kontrollera att användaren har rätt data.
+
+# Skriv test som skapar en ny användare och därefter uppdaterar namnet med en patch-request
+# kontrollera att användaren därefter har uppdaterats med hjälp av en get-request

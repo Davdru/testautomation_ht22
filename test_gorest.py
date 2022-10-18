@@ -113,6 +113,24 @@ def new_user():
 #
 # Försök skapa en ny fixtur som ger en ny post
 
+
+@pytest.fixture
+def new_post(new_user):
+    post_data = {"user_id": new_user['id'], "title": "Postens titel", "body": "Postens brödtext"}
+    new_post_response = requests.post(GOREST_POSTS, data=post_data, headers=HEADER)
+    post = new_post_response.json()
+    yield post
+    requests.delete(GOREST_POSTS + f"/{post['id']}", headers=HEADER)
+
+
+def test_create_post_with_fixture(new_post):
+    assert "title" in new_post
+
+
+def test_check_post_user(new_user, new_post):
+    assert new_user['id'] == new_post['user_id']
+
+
 def test_create_post():
     # 1. Skapa en ny användare
     # 2. Skapa en ny post med id från användaren från steg 1.

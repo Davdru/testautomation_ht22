@@ -123,6 +123,9 @@ def new_post(new_user):
     requests.delete(GOREST_POSTS + f"/{post['id']}", headers=HEADER)
 
 
+# Uppgift 3
+# Kan du skapa en fixtur som istället ger tillbaks responsobjektet så att vi kan kontrollera svarstider och returkoder?
+
 def test_create_post_with_fixture(new_post):
     assert "title" in new_post
 

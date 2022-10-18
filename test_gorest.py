@@ -6,6 +6,16 @@ import pytest
 GOREST_USERS = "https://gorest.co.in/public/v2/users"
 GOREST_POSTS = "https://gorest.co.in/public/v2/posts"
 
+TESTDATA = {"name": "Min Testuser",
+            "email": "dennesadress@gmail.com",
+            "gender": "male",
+            "status": "active"}
+
+with open("token") as f:
+    TOKEN = f.read().strip()
+
+HEADER = {"authorization": f"Bearer {TOKEN}"}
+
 
 @pytest.fixture
 def api_token() -> str:
@@ -69,26 +79,19 @@ def user_data():
 # TODO vilka andra statusar finns, hur kan vi ändra
 
 def test_create_user():
-    testdata = {"name": "Min Testuser",
-                "email": "testaddress@gmail.com",
-                "gender": "male",
-                "status": "active"}
-    with open("token") as f:
-        token = f.read().strip()
-    header = {"authorization": f"Bearer {token}"}
-
-    response = requests.post(GOREST_USERS, data=testdata, headers=header)
+    response = requests.post(GOREST_USERS, data=TESTDATA, headers=HEADER)
     response_json = response.json()
 
     assert response.status_code == HTTPStatus.CREATED
-    assert response_json['name'] == testdata['name']
-    assert response_json['email'] == testdata['email']
-    assert response_json['gender'] == testdata['gender']
-    assert response_json['status'] == testdata['status']
+    assert response_json['name'] == TESTDATA['name']
+    assert response_json['email'] == TESTDATA['email']
+    assert response_json['gender'] == TESTDATA['gender']
+    assert response_json['status'] == TESTDATA['status']
 
     # För att ta bort en användare använder vi en DELETE request mot den specifika användaren
     # https://gorest.co.in/public/v2/users/123  <- den specifika användaren 123
-    delete_response = requests.delete(GOREST_USERS + f"/{response_json['id']}", headers=header)
+    delete_response = requests.delete(GOREST_USERS + f"/{response_json['id']}", headers=HEADER)
+
 
 # Uppgift 1.
 # Skriv test som skapar en ny användare och därefter hämtar användaren med  hjälp av en get-request
@@ -96,3 +99,44 @@ def test_create_user():
 
 # Skriv test som skapar en ny användare och därefter uppdaterar namnet med en patch-request
 # kontrollera att användaren därefter har uppdaterats med hjälp av en get-request
+
+
+@pytest.fixture
+def new_user():
+    user = requests.post(GOREST_USERS, data=TESTDATA, headers=HEADER).json()
+    yield user
+    requests.delete(GOREST_USERS + f"/{user['id']}", headers=HEADER)
+
+
+# Uppgift 2.
+# Skriv om några av dina tester med fixturen new_user istället för att själv skapa användare
+#
+# Försök skapa en ny fixtur som ger en ny post
+
+def test_create_post():
+    # 1. Skapa en ny användare
+    # 2. Skapa en ny post med id från användaren från steg 1.
+    #   1. Skapa post-data, user_id, title, body
+    # 3. Asserts
+    # 4. Ta bort posten
+    # 5. Ta bort användaren från steg 1.
+    new_user = requests.post(GOREST_USERS, data=TESTDATA, headers=HEADER).json()
+    post_data = {"user_id": new_user['id'], "title": "Postens titel", "body": "Postens brödtext"}
+
+    new_post_response = requests.post(GOREST_POSTS, data=post_data, headers=HEADER)
+    new_post = new_post_response.json()
+
+    assert new_post['user_id'] == new_user['id']
+
+    requests.delete(GOREST_POSTS + f"/{new_post['id']}", headers=HEADER)
+    requests.delete(GOREST_USERS + f"/{new_user['id']}", headers=HEADER)
+
+
+def test_create_post2(new_user):
+    post_data = {"user_id": new_user['id'], "title": "Postens titel", "body": "Postens brödtext"}
+    new_post_response = requests.post(GOREST_POSTS, data=post_data, headers=HEADER)
+    new_post = new_post_response.json()
+
+    assert new_post['user_id'] == new_user['id']
+
+    requests.delete(GOREST_POSTS + f"/{new_post['id']}", headers=HEADER)

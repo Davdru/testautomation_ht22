@@ -12,6 +12,50 @@ TESTDATA = {"name": "Min Testuser",
             "gender": "male",
             "status": "active"}
 
+LIST_OF_USERS = [{"name": "Testperson Testsson",
+                  "email": "endf@enmladres4s.se",
+                  "gender": "male",
+                  "status": "active"},
+                 {"name": "En anna person",
+                  "email": "endf@enmladres4.se",
+                  "gender": "female",
+                  "status": "active"},
+                 {"name": "Ny Person",
+                  "email": "dennes@adress.se",
+                  "gender": "female",
+                  "status": "active"},
+                 {"name": "Min Testuser",
+                  "email": "dennesadrss@outlook.se",
+                  "gender": "male",
+                  "status": "active"}
+                 ]
+
+LIST_OF_USERS_AND_STATUS_CODE = [
+    ({"name": "Testperson Testsson",
+      "email": "endf@enmladres4s.se",
+      "gender": "male",
+      "status": "active"}, HTTPStatus.CREATED),
+    ({"name": "En anna person",
+      "email": "endf@enmladres4.se",
+      "gender": "female",
+      "status": "active"}, HTTPStatus.CREATED),
+    ({"name": "Ny Person",
+      "email": "dennes@adress.se",
+      "gender": "female",
+      "status": "active"}, HTTPStatus.CREATED),
+    ({"name": "Min Testuser",
+      "email": "dennesadrss@outlook.se",
+      "gender": "male",
+      "status": "active"}, HTTPStatus.CREATED),
+    ({"name": "Min Testuser",
+      "gender": "male",
+      "status": "active"}, HTTPStatus.UNPROCESSABLE_ENTITY),
+    ({"name": "Min Testuser",
+      "email": "dennesadrssoutlook.se",
+      "gender": "male",
+      "status": "active"}, HTTPStatus.CREATED)
+]
+
 with open("token") as f:
     TOKEN = f.read().strip()
 
@@ -35,6 +79,15 @@ def user_data():
             "email": "some_mail@mail.fr",
             "gender": "male",
             "status": "active"}
+
+
+# Här använder vi en lista av användardata som argument till fixturen.
+# Testfunktioner som använder den här fixturen kommer köras en gång per element i listan
+# Detta låter oss skriva en testfunktion som sedan körs med en stor mängd olika testdata.
+# Exempelvis kan vi testa en stor mängd kombinationer av namn med olika specialtecken
+@pytest.fixture(params=LIST_OF_USERS)
+def user_data2(request):
+    return request.param
 
 
 # Ett test kan delas in i 3-4 olika delar.
@@ -168,16 +221,33 @@ def test_new_user_status_code(new_user_request):
 def make_user():
     created_users = []
 
-    def _make_user(name: str, email: str, gender: str, status: str) -> User:
+    def _make_user(name: str, email: str, gender: str, status: str) -> tuple[requests.Response, User]:
         response = requests.post(GOREST_USERS, data={"name": name, "email": email, "gender": gender, "status": status},
                                  headers=HEADER)
         created_user = User(**response.json())
         created_users.append(created_user)
-        return created_user
+        return response, created_user
 
     yield _make_user
     for user in created_users:
         requests.delete(GOREST_USERS + f"/{user.id}", headers=HEADER)
+
+
+@pytest.fixture
+def make_user_request():
+    created_users = []
+
+    def _make_request(user_dict) -> requests.Response:
+        response = requests.post(GOREST_USERS, data=user_dict,
+                                 headers=HEADER)
+        if response.status_code == HTTPStatus.CREATED:
+            created_users.append(response.json())
+        return response
+
+    yield _make_request
+
+    for user in created_users:
+        requests.delete(GOREST_USERS + f"/{user['id']}", headers=HEADER)
 
 
 def test_with_two_users(make_user):
@@ -186,6 +256,42 @@ def test_with_two_users(make_user):
     user2 = make_user("Användare 2", "laskjdf@sdlasdfaskfaj.com", "female", "active")
     print(user1)
     print(user2)
+
+
+def test_create_user_with_param(user_data2, make_user):
+    _, user = make_user(**user_data2)
+    assert user.name == user_data2['name']
+    assert user.email == user_data2['email']
+    assert user.gender == user_data2['gender']
+    assert user.status == user_data2['status']
+
+
+
+# Om det är relativt enkel testdata kan vi istället parametrisera sjävlva testfunktionen enligt följande
+# Här talar vi om att testfunktionen skall anropas en gång för varje element i LIST_OF_USERS
+# Vid varje anrop kommer elementet ur LIST_OF_USERS ges till testfunktionen under namnet user_dict
+@pytest.mark.parametrize("user_dict", LIST_OF_USERS)
+def test_create_user_with_mark_param(user_dict, make_user):
+    _, user = make_user(**user_dict)
+    assert user.name == user_dict['name']
+    assert user.email == user_dict['email']
+    assert user.gender == user_dict['gender']
+    assert user.status == user_dict['status']
+
+
+# Vi kan genom att para ihop testdata med det förväntade utfallet använda en testfunktion
+# för att testa en stor mängd olika variationer av testdata
+# I det här fallet har vi i listan LIST_OF_USERS_AND_STATUS_CODE
+# par av data för att skapa nya användare i systemet tillsammans med den förväntade statuskoden.
+# Exempelvis 201 CREATED om det är data som skall kunna reseultera i en ny användare
+# eller 422 UNPROCESSABLE_ENTITY om det är användardata som saknar ett viktigt fält som epost
+# Textsträngen "user_dict, status_code" talar om vad vi vill kalla de olika delarna av paren testdata, utfall ur listan
+# Vi ser sedan samma namn, user_dict och status_code i argumentlistan till testfunktionen.
+# pytest kommer att köra testfunktionen en gång för varje par av värden i LIST_OF_USERS_AND_STATUS_CODE
+@pytest.mark.parametrize("user_dict, status_code", LIST_OF_USERS_AND_STATUS_CODE)
+def test_create_user_status_code(user_dict, status_code, make_user_request):
+    response = make_user_request(user_dict)
+    assert response.status_code == status_code, f"Expected {status_code} got {response.status_code}"
 
 
 # Gammalt skräp

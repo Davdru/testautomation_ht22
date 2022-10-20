@@ -7,7 +7,7 @@ GOREST_USERS = "https://gorest.co.in/public/v2/users"
 GOREST_POSTS = "https://gorest.co.in/public/v2/posts"
 
 TESTDATA = {"name": "Min Testuser",
-            "email": "dennesadress@gmail.com",
+            "email": "dennesadrss@outlook.se",
             "gender": "male",
             "status": "active"}
 
@@ -100,6 +100,12 @@ def test_create_user():
 # Skriv test som skapar en ny användare och därefter uppdaterar namnet med en patch-request
 # kontrollera att användaren därefter har uppdaterats med hjälp av en get-request
 
+@pytest.fixture
+def new_user_request():
+    user_response = requests.post(GOREST_USERS, data=TESTDATA, headers=HEADER)
+    yield user_response
+    requests.delete(GOREST_USERS + f"/{user_response.json()['id']}", headers=HEADER)
+
 
 @pytest.fixture
 def new_user():
@@ -134,6 +140,16 @@ def test_check_post_user(new_user, new_post):
     assert new_user['id'] == new_post['user_id']
 
 
+# Tester av statuskoder och svarstider
+def test_new_user_response_time(new_user_request):
+    assert new_user_request.elapsed.microseconds < 700000
+
+
+def test_new_user_status_code(new_user_request):
+    assert new_user_request.status_code == HTTPStatus.CREATED
+
+
+# Gammalt skräp
 def test_create_post():
     # 1. Skapa en ny användare
     # 2. Skapa en ny post med id från användaren från steg 1.

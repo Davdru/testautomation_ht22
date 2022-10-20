@@ -108,10 +108,19 @@ def new_user_request():
 
 
 @pytest.fixture
-def new_user():
-    user = requests.post(GOREST_USERS, data=TESTDATA, headers=HEADER).json()
-    yield user
-    requests.delete(GOREST_USERS + f"/{user['id']}", headers=HEADER)
+def new_user(new_user_request):
+    return new_user_request.json()
+
+
+@pytest.fixture
+def new_user_and_response(new_user_request) -> tuple[dict, requests.Response]:
+    return new_user_request.json(), new_user_request
+
+
+def test_foo(new_user_and_response):
+    user, response = new_user_and_response
+    assert "name" in user
+    assert response.status_code == HTTPStatus.CREATED
 
 
 # Uppgift 2.
@@ -147,6 +156,35 @@ def test_new_user_response_time(new_user_request):
 
 def test_new_user_status_code(new_user_request):
     assert new_user_request.status_code == HTTPStatus.CREATED
+
+
+# Hur när vi behöver två eller fler användare?
+# Vi vill fortfarande att det skall städas upp automatiskt efter att testet körts
+# Vi kan inte använda de existerande fixturerna, de ger oss bara en användare
+# Vad vi behöver är en fixtur som kan skapa användare på kommando och som sedan städar upp när vi är klara.
+# Fixturen behöver hålla koll på vilka användare som skapats för att kunna ta bort dom efteråt.
+@pytest.fixture
+def make_user():
+    created_users = []
+
+    def _make_user(name: str, email: str, gender: str, status: str) -> dict:
+        response = requests.post(GOREST_USERS, data={"name": name, "email": email, "gender": gender, "status": status},
+                                 headers=HEADER)
+        created_user = response.json()
+        created_users.append(created_user)
+        return created_user
+
+    yield _make_user
+    for user in created_users:
+        requests.delete(GOREST_USERS + f"/{user['id']}", headers=HEADER)
+
+
+def test_with_two_users(make_user):
+    # Här ser vi att vi kan skapa två nya användare som sedan automatiskt tas bort efter att testet körts
+    user1 = make_user("Användare 1", "laskjdf@sdlkfaj.com", "male", "active")
+    user2 = make_user("Användare 2", "laskjdf@sdlasdfaskfaj.com", "female", "active")
+    print(user1)
+    print(user2)
 
 
 # Gammalt skräp

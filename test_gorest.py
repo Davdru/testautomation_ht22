@@ -2,6 +2,7 @@ from http import HTTPStatus
 
 import requests
 import pytest
+from data_model import User
 
 GOREST_USERS = "https://gorest.co.in/public/v2/users"
 GOREST_POSTS = "https://gorest.co.in/public/v2/posts"
@@ -167,16 +168,16 @@ def test_new_user_status_code(new_user_request):
 def make_user():
     created_users = []
 
-    def _make_user(name: str, email: str, gender: str, status: str) -> dict:
+    def _make_user(name: str, email: str, gender: str, status: str) -> User:
         response = requests.post(GOREST_USERS, data={"name": name, "email": email, "gender": gender, "status": status},
                                  headers=HEADER)
-        created_user = response.json()
+        created_user = User(**response.json())
         created_users.append(created_user)
         return created_user
 
     yield _make_user
     for user in created_users:
-        requests.delete(GOREST_USERS + f"/{user['id']}", headers=HEADER)
+        requests.delete(GOREST_USERS + f"/{user.id}", headers=HEADER)
 
 
 def test_with_two_users(make_user):

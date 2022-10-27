@@ -2,6 +2,44 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
+
+# Den här klassen skall representera huvudsidan chalmers.se med sina olika länkar och innehåll
+class ChalmersMainPage:
+    driver: webdriver.Edge # Vi behöver en driver för att interagera med webbsidan, vi börjar skriva koden för en typ av driver,
+    # i mitt fall Edge, vi skall senare ändra så att objektet kan hantera alla olika drivers
+
+    def __init__(self, driver: webdriver.Edge):
+        self.driver = driver
+
+    def click_utbildning(self):
+        self.driver.find_element(By.LINK_TEXT, "Utbildning").click()
+
+    def click_forskning(self):
+        self.driver.find_element(By.LINK_TEXT, "Forskning").click()
+
+    def click_samverkan(self):
+        self.driver.find_element(By.LINK_TEXT, "Samverkan").click()
+
+
+
+def test_nav_till_utbildning():
+    browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
+    browser.set_window_size(1920, 1080)
+    browser.get("https://www.chalmers.se")
+    main_page = ChalmersMainPage(browser)
+    main_page.click_utbildning()
+    assert browser.current_url == "https://www.chalmers.se/sv/utbildning/Sidor/default.aspx"
+
+
+def test_nav_till_forskning():
+    browser = webdriver.Edge()  # Starta en webläsare och ge mig en referens till den så att jag kan styra den
+    browser.set_window_size(1920, 1080)
+    browser.get("https://www.chalmers.se")
+    main_page = ChalmersMainPage(browser)
+    main_page.click_forskning()
+    assert browser.current_url == "https://www.chalmers.se/sv/forskning/Sidor/default.aspx"
+
+
 # 1 målet
 # Öppna en webläsare som vi har kontroll över och gå till www.chalmers.se
 

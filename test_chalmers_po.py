@@ -3,13 +3,19 @@ import time
 import pytest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+
+RESOLUTIONS = ((1920, 1080), (2560, 1440))
 
 
-@pytest.fixture
-def browser():
-    driver = webdriver.Edge()
-    driver.set_window_position(0,0)
-    driver.set_window_size(1920, 1080)
+@pytest.fixture(params=RESOLUTIONS, scope="module")
+def browser(request):
+    x, y = request.param
+    options = Options()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome(options=options)
+    driver.set_window_position(0, 0)
+    driver.set_window_size(x, y)
     yield driver
     driver.quit()
 
@@ -62,18 +68,18 @@ def test_nav_till_program_grundniva(browser):
     # assert browser.current_url == "https://www.chalmers.se/sv/utbildning/Sidor/default.aspx"
 
 
-def test_nav_till_utbildning():
-    browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
-    browser.set_window_size(1920, 1080)
+def test_nav_till_utbildning(browser):
+    # browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
+    # browser.set_window_size(1920, 1080)
     browser.get("https://www.chalmers.se")
     main_page = ChalmersMainPage(browser)
     main_page.click_utbildning()
     assert browser.current_url == "https://www.chalmers.se/sv/utbildning/Sidor/default.aspx"
 
 
-def test_nav_till_forskning():
-    browser = webdriver.Edge()  # Starta en webläsare och ge mig en referens till den så att jag kan styra den
-    browser.set_window_size(1920, 1080)
+def test_nav_till_forskning(browser):
+    # browser = webdriver.Edge()  # Starta en webläsare och ge mig en referens till den så att jag kan styra den
+    # browser.set_window_size(1920, 1080)
     browser.get("https://www.chalmers.se")
     main_page = ChalmersMainPage(browser)
     main_page.click_forskning()
@@ -88,9 +94,9 @@ def test_nav_till_forskning():
 # Några problem med testfunktioner skrivna så här.
 # 1. Hårdkodad data i testfunktionen. Exempelvis hur vi hittar olika element. Om systemet vi testar förändras måste vi manuellt rätta varje test
 # 2. Setup av webläsare och upplösning inne i testfunktionen. Vill vi testa på flera webläsare och upplösnignar får vi skapa fler testfunktioner med dubblering av kod som följd
-def test_nav_it():
-    browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
-    browser.set_window_size(1920, 1080)
+def test_nav_it(browser):
+    # browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
+    # browser.set_window_size(1920, 1080)
     browser.get("https://www.chalmers.se") # Navigera till chalmers.se
     browser.find_element(By.LINK_TEXT, "Utbildning").click() # hitta länk baserat på länktext och klicka på
     browser.find_element(By.LINK_TEXT, "Program på grundnivå").click()
@@ -98,9 +104,9 @@ def test_nav_it():
     browser.find_element(By.CSS_SELECTOR, ".orange li:nth-child(5) .title").click()
 
 
-def test_nav_data_civ():
-    browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
-    browser.set_window_size(1920, 1080)
+def test_nav_data_civ(browser):
+    # browser = webdriver.Edge() # Starta en webläsare och ge mig en referens till den så att jag kan styra den
+    # browser.set_window_size(1920, 1080)
     browser.get("https://www.chalmers.se") # Navigera till chalmers.se
     browser.find_element(By.LINK_TEXT, "Utbildning").click() # hitta länk baserat på länktext och klicka på
     browser.find_element(By.LINK_TEXT, "Program på grundnivå").click()

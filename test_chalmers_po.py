@@ -7,8 +7,8 @@ from selenium.webdriver.edge.options import Options as EdgeOptions
 
 from chalmers_pages import ChalmersMainPage
 
-RESOLUTIONS = ((1920, 1080), (2560, 1440), (1024, 768))
-
+RESOLUTIONS = ((1920, 1080),)
+RESOLUTIONS2 = ((1920, 1080), (2560, 1440), (1024, 768))
 HEADLESS = False
 
 
@@ -26,8 +26,8 @@ def get_edge():
     return webdriver.Edge(options=options)
 
 
-BROWSERS = [get_chrome, get_edge]
-
+BROWSERS = [get_chrome]
+BROWSERS2 = [get_chrome, get_edge]
 
 @pytest.fixture(params=BROWSERS, scope="module")
 def driver(request):
@@ -50,8 +50,8 @@ def test_nav_till_program_grundniva(browser):
     browser.get("https://www.chalmers.se")
     main_page = ChalmersMainPage(browser)
     utbildning = main_page.click_utbildning()
-    utbildning.click_program_grundniva()
-    browser.save_screenshot("foo.png")
+    program_grund = utbildning.click_program_grundniva()
+    assert program_grund.title == "Hello"
     #assert browser.current_url == "https://www.chalmers.se/sv/utbildning/Sidor/default.aspx"
 
 

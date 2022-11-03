@@ -31,8 +31,9 @@ class ChalmersMainPage(ChalmersPage):
 
 
 class ChalmersUtbildning(ChalmersPage):
-    def click_program_grundniva(self):
+    def click_program_grundniva(self) -> ChalmersProgramGrundniva:
         self.driver.find_element(By.LINK_TEXT, "Program på grundnivå").click()
+        return ChalmersProgramGrundniva(self.driver)
 
     @property
     def title(self) -> str:
@@ -41,3 +42,9 @@ class ChalmersUtbildning(ChalmersPage):
     @property
     def body(self) -> str:
         return self.driver.find_element(By.XPATH, '//*[@id="ctl00_MSO_ContentDiv"]/div[2]/div[2]/div/div[1]/div/div[1]/div/div/div[2]').text
+
+
+class ChalmersProgramGrundniva(ChalmersPage):
+    @property
+    def title(self):
+        return self.driver.find_element(By.XPATH, '//*[@id="ctl00_MSO_ContentDiv"]/div[2]/div[2]/div/h1').text

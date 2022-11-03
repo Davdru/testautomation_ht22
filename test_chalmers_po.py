@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.remote.webelement import WebElement
 
 from chalmers_pages import ChalmersMainPage
 
@@ -12,22 +13,38 @@ RESOLUTIONS2 = ((1920, 1080), (2560, 1440), (1024, 768))
 HEADLESS = False
 
 
+class ChromeWithMem(webdriver.Chrome):
+    last_element: WebElement
+
+    def find_element(self, *args, **kwargs) -> WebElement:
+        self.last_element = super(webdriver.Chrome, self).find_element(*args, **kwargs)
+        return self.last_element
+
+
+class EdgeWithMem(webdriver.Edge):
+    last_element: WebElement
+
+    def find_element(self, *args, **kwargs) -> WebElement:
+        self.last_element = super(webdriver.Edge, self).find_element(*args, **kwargs)
+        return self.last_element
+
+
 def get_chrome():
     options = ChromeOptions()
     if HEADLESS:
         options.add_argument("--headless")
-    return webdriver.Chrome(options=options)
+    return ChromeWithMem(options=options)
 
 
 def get_edge():
     options = EdgeOptions()
     if HEADLESS:
         options.add_argument("headless")
-    return webdriver.Edge(options=options)
+    return EdgeWithMem(options=options)
 
 
-BROWSERS = [get_chrome]
-BROWSERS2 = [get_chrome, get_edge]
+BROWSERS2 = [get_chrome]
+BROWSERS = [get_chrome, get_edge]
 
 @pytest.fixture(params=BROWSERS, scope="module")
 def driver(request):
@@ -51,7 +68,7 @@ def test_nav_till_program_grundniva(browser):
     main_page = ChalmersMainPage(browser)
     utbildning = main_page.click_utbildning()
     program_grund = utbildning.click_program_grundniva()
-    assert program_grund.title == "Hello"
+    assert program_grund.title == "Hello", "Titel på program på grundnivå skall vara Hello"
     #assert browser.current_url == "https://www.chalmers.se/sv/utbildning/Sidor/default.aspx"
 
 

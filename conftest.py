@@ -1,6 +1,15 @@
 import pytest
 
 
+def highlight_element(last_element, color, border):
+    driver = last_element._parent
+
+    def apply_style(s):
+        driver.execute_script("arguments[0].setAttribute('style', arguments[1]);",
+                              last_element, s)
+
+    apply_style(f"border: {border}px solid {color}")
+
 
 @pytest.mark.hookwrapper
 def pytest_runtest_makereport(item):
@@ -14,9 +23,10 @@ def pytest_runtest_makereport(item):
         if report.failed:
             # report.nodeid är namnet på testet på formen pythonfil::testfunktion
             filename = f"screenshots/{report.nodeid.replace('::', '__').replace('.py', '_')}.png"
-            report_path = "reports/" # TODO styr var bilderna sparas beroende på argumenten till pytest --html=
-            browser = item.funcargs['browser']
+            report_path = "reports/"  # TODO styr var bilderna sparas beroende på argumenten till pytest --html=
+            browser = item.funcargs['browser']  # TODO hantera fallet där vi inte har någon browser i testfallet
 
+            highlight_element(browser.last_element, "red", 5)
             browser.save_screenshot(report_path + filename)
             extra.append(pytest_html.extras.html(create_img_tag(filename)))
 

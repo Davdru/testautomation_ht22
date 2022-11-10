@@ -1,5 +1,3 @@
-import json
-
 import requests
 
 QUIZ_URL = "https://bjornkjellgren.se/quiz/v2/questions"
@@ -42,8 +40,6 @@ class Question:
         return len(self.answers)
 
 
-
-
 class ConsolePlayer:
     @staticmethod
     def ask_num(n) -> int:
@@ -58,6 +54,7 @@ class ConsolePlayer:
     @staticmethod
     def send_message(message: str):
         print(message)
+
 
 class QuizAPI:
     url: str
@@ -83,15 +80,30 @@ class QuizAPI:
 
 
 
+class BjornsFakeAPI:
+    questions: list[Question]
+
+    def __init__(self):
+        self.questions = []
+        a1 = Answer("42", True)
+        a2 = Answer("Lite oklart", False)
+        ans = [a1, a2]
+        q1 = Question(1, "Vad är meningen med livet universum och allting?", 5, 2, ans)
+        self.questions.append(q1)
+
+    def get_questions(self) -> list[Question]:
+        return self.questions
+
+
 class QuizGame:
     quiz_api: QuizAPI
     player: ConsolePlayer
     questions_asked: int
     questions_correct: int
 
-    def __init__(self):
-        self.quiz_api = QuizAPI(QUIZ_URL)
-        self.player = ConsolePlayer()
+    def __init__(self, quiz_api: QuizAPI, player: ConsolePlayer):
+        self.quiz_api = quiz_api
+        self.player = player
         self.questions_asked = 0
         self.questions_correct = 0
 
@@ -113,5 +125,8 @@ class QuizGame:
 
 
 if __name__ == '__main__':
-    quiz = QuizGame()
+    p = ConsolePlayer()
+    # q_api = QuizAPI(QUIZ_URL)
+    q_api = BjornsFakeAPI()
+    quiz = QuizGame(q_api, p)
     quiz.run()

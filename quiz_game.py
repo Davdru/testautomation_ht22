@@ -40,9 +40,17 @@ class Question:
         return len(self.answers)
 
 
-class ConsolePlayer:
+class Player:
+    def ask_num(self, n: int) -> int:
+        raise NotImplementedError
+
+    def send_message(self, message: str):
+        raise NotImplementedError
+
+
+class ConsolePlayer(Player):
     @staticmethod
-    def ask_num(n) -> int:
+    def ask_num(n: int) -> int:
         while True:
             try:
                 res = int(input(">"))
@@ -107,11 +115,11 @@ class BjornsFakeAPI(BaseAPI):
 
 class QuizGame:
     quiz_api: BaseAPI
-    player: ConsolePlayer
+    player: Player
     questions_asked: int
     questions_correct: int
 
-    def __init__(self, quiz_api: BaseAPI, player: ConsolePlayer):
+    def __init__(self, quiz_api: BaseAPI, player: Player):
         self.quiz_api = quiz_api
         self.player = player
         self.questions_asked = 0

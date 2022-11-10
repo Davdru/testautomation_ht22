@@ -1,5 +1,5 @@
 from behave import *
-from quiz_game import QuizGame, QuizAPI, QUIZ_URL, ConsolePlayer, BaseAPI, Question, Answer
+from quiz_game import QuizGame, QuizAPI, QUIZ_URL, ConsolePlayer, BaseAPI, Question, Answer, Player
 
 # Vi behöver
 # Kunna skapa ett quiz-program
@@ -21,33 +21,45 @@ class TestAPI(BaseAPI):
         pass
 
 
+class TestPlayer(Player):
+    last_message: str
+
+    def ask_num(self, n: int) -> int:
+        return 1
+
+    def send_message(self, message: str):
+        self.last_message = message
+
+
 @given(u'A quiz program')
 def step_impl(context):
     context.quiz_api = TestAPI()
-    context.quiz_player = ConsolePlayer()
+    context.quiz_player = TestPlayer()
     context.quiz_game = QuizGame(context.quiz_api, context.quiz_player)
 
 
 @given(u'There is one question')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: Given There is one question')
+    context.question = Question(1, "", 0, 0, [])
+    context.quiz_api.questions.append(context.question)
 
 
 @given(u'Answer 1 is correct')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: Given Answer 1 is correct')
+    context.answer = Answer("", True)
+    context.question.answers.append(context.answer)
 
 
 @when(u'The user answers 1')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: When The user answers 1')
+    pass
 
 
 @when(u'The program is run')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: When The program is run')
+    context.quiz_game.run()
 
 
-@then(u'The result should be 1 of 1 questions correct')
+@then(u'The result should be You answered 1 of 1 correct!')
 def step_impl(context):
-    raise NotImplementedError(u'STEP: Then The result should be 1 of 1 questions correct')
+    assert context.quiz_player.last_message == "You answered 1 of 1 correct!", f"got {context.quiz_player.last_message}"

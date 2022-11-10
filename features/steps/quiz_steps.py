@@ -20,12 +20,23 @@ class TestAPI(BaseAPI):
     def post_answer(self, question: Question, correct: bool):
         pass
 
+    def print_questions(self):
+        print("-"*80)
+        for q in self.questions:
+            print(q.prompt)
+            for a in q.answers:
+                print(a.answer, a.correct)
+        print("-" * 80)
+
 
 class TestPlayer(Player):
     last_message: str
+    next_answer: int
 
+    def __init__(self):
+        self.next_answer = 1
     def ask_num(self, n: int) -> int:
-        return 1
+        return self.next_answer
 
     def send_message(self, message: str):
         self.last_message = message
@@ -36,6 +47,16 @@ def step_impl(context):
     context.quiz_api = TestAPI()
     context.quiz_player = TestPlayer()
     context.quiz_game = QuizGame(context.quiz_api, context.quiz_player)
+
+
+@given(u'a question "{prompt}"')
+def step_impl(context, prompt):
+    answers = []
+    for row in context.table:
+        answer = row['answer']
+        correct = True if row['correct'] == 'True' else False
+        answers.append(Answer(answer, correct))
+    context.quiz_api.questions.append(Question(1, prompt, 10, 5, answers))
 
 
 @given(u'There is one question')
@@ -50,9 +71,9 @@ def step_impl(context):
     context.question.answers.append(context.answer)
 
 
-@when(u'The user answers 1')
-def step_impl(context):
-    pass
+@when(u'The user answers {ans}')
+def step_impl(context, ans):
+    context.quiz_player.next_answer = int(ans)
 
 
 @when(u'The program is run')
@@ -60,6 +81,7 @@ def step_impl(context):
     context.quiz_game.run()
 
 
-@then(u'The result should be You answered 1 of 1 correct!')
-def step_impl(context):
-    assert context.quiz_player.last_message == "You answered 1 of 1 correct!", f"got {context.quiz_player.last_message}"
+@then(u'The result should be {expected_result}')
+def step_impl(context, expected_result):
+    assert context.quiz_player.last_message == expected_result, f"got {context.quiz_player.last_message}"
+

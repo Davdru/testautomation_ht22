@@ -144,7 +144,7 @@ class QuizGame:
 
 if __name__ == '__main__':
     p = ConsolePlayer()
-    # q_api = QuizAPI(QUIZ_URL)
-    q_api = BjornsFakeAPI()
+    q_api = QuizAPI(QUIZ_URL)
+    # q_api = BjornsFakeAPI()
     quiz = QuizGame(q_api, p)
     quiz.run()

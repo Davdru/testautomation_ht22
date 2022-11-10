@@ -33,3 +33,7 @@ Feature: Behave tests of quiz game
     When The user answers 3
     And The program is run
     Then The result should be You answered 0 of 1 correct!
+
+# Uppgift.
+  # Skapa scenario med flera frågor, du skall kunna ange vilka svar som skall ges
+  # Du behöver ändra koden för TestUser och stegimplementationerna för styra vad användaren svarar

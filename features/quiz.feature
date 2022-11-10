@@ -34,6 +34,44 @@ Feature: Behave tests of quiz game
     And The program is run
     Then The result should be You answered 0 of 1 correct!
 
-# Uppgift.
-  # Skapa scenario med flera frågor, du skall kunna ange vilka svar som skall ges
-  # Du behöver ändra koden för TestUser och stegimplementationerna för styra vad användaren svarar
+
+  @quiz
+  Scenario: Flera frågor i samma scenario
+    Given A quiz program
+    And a question "Vad är meningen med livet, universum och allting?"
+      | answer  | correct |
+      | 99      | False   |
+      | 42      | True    |
+      | 12      | False   |
+      | Ingen aning | False |
+    And a question "Vilken funktion använder vi för att skriva ut text i terminalen?"
+      | answer  | correct |
+      | input()      | False   |
+      | assert      | False   |
+      | print()      | True   |
+      | Ingen aning | False |
+    When The user answers 2
+    And The user answers 3
+    And The program is run
+    Then The result should be You answered 2 of 2 correct!
+
+
+  @quiz
+  Scenario: Flera frågor i samma scenario, svara fel
+    Given A quiz program
+    And a question "Vad är meningen med livet, universum och allting?"
+      | answer  | correct |
+      | 99      | False   |
+      | 42      | True    |
+      | 12      | False   |
+      | Ingen aning | False |
+    And a question "Vilken funktion använder vi för att skriva ut text i terminalen?"
+      | answer  | correct |
+      | input()      | False   |
+      | assert      | False   |
+      | print()      | True   |
+      | Ingen aning | False |
+    When The user answers 1
+    And The user answers 4
+    And The program is run
+    Then The result should be You answered 0 of 2 correct!

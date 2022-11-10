@@ -31,12 +31,16 @@ class TestAPI(BaseAPI):
 
 class TestPlayer(Player):
     last_message: str
-    next_answer: int
+    next_answer: list[int]
 
     def __init__(self):
-        self.next_answer = 1
+        self.next_answer = []
+
     def ask_num(self, n: int) -> int:
-        return self.next_answer
+        return self.next_answer.pop(0)
+
+    def add_answer(self, n: int):
+        self.next_answer.append(n)
 
     def send_message(self, message: str):
         self.last_message = message
@@ -73,7 +77,7 @@ def step_impl(context):
 
 @when(u'The user answers {ans}')
 def step_impl(context, ans):
-    context.quiz_player.next_answer = int(ans)
+    context.quiz_player.add_answer(int(ans))
 
 
 @when(u'The program is run')

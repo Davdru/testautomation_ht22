@@ -75,6 +75,11 @@ def step_impl(context):
     context.question.answers.append(context.answer)
 
 
+@given(u'The user answers {ans}')
+def step_impl(context, ans):
+    context.quiz_player.add_answer(int(ans))
+
+
 @when(u'The user answers {ans}')
 def step_impl(context, ans):
     context.quiz_player.add_answer(int(ans))

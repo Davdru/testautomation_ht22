@@ -56,7 +56,15 @@ class ConsolePlayer:
         print(message)
 
 
-class QuizAPI:
+class BaseAPI:
+    def get_questions(self) -> list[Question]:
+        raise NotImplementedError
+
+    def post_answer(self, question: Question, correct: bool):
+        raise NotImplementedError
+
+
+class QuizAPI(BaseAPI):
     url: str
 
     def __init__(self, url):
@@ -79,8 +87,7 @@ class QuizAPI:
         return Question(q['id'], q['prompt'], q['times_asked'], q['times_correct'], self._parse_answers(q['answers']))
 
 
-
-class BjornsFakeAPI:
+class BjornsFakeAPI(BaseAPI):
     questions: list[Question]
 
     def __init__(self):
@@ -94,14 +101,17 @@ class BjornsFakeAPI:
     def get_questions(self) -> list[Question]:
         return self.questions
 
+    def post_answer(self, question: Question, correct: bool):
+        pass
+
 
 class QuizGame:
-    quiz_api: QuizAPI
+    quiz_api: BaseAPI
     player: ConsolePlayer
     questions_asked: int
     questions_correct: int
 
-    def __init__(self, quiz_api: QuizAPI, player: ConsolePlayer):
+    def __init__(self, quiz_api: BaseAPI, player: ConsolePlayer):
         self.quiz_api = quiz_api
         self.player = player
         self.questions_asked = 0

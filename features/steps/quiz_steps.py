@@ -1,5 +1,5 @@
 from behave import *
-from quiz_game import QuizGame, QuizAPI, QUIZ_URL, ConsolePlayer
+from quiz_game import QuizGame, QuizAPI, QUIZ_URL, ConsolePlayer, BaseAPI, Question, Answer
 
 # Vi behöver
 # Kunna skapa ett quiz-program
@@ -7,9 +7,23 @@ from quiz_game import QuizGame, QuizAPI, QUIZ_URL, ConsolePlayer
 # Syra över vilka svar som är korrekt på en fråga
 # Kontrollera vad som skrivs ut på terminalen
 
+
+class TestAPI(BaseAPI):
+    questions: list[Question]
+
+    def __init__(self):
+        self.questions = []
+
+    def get_questions(self) -> list[Question]:
+        return self.questions
+
+    def post_answer(self, question: Question, correct: bool):
+        pass
+
+
 @given(u'A quiz program')
 def step_impl(context):
-    context.quiz_api = QuizAPI(QUIZ_URL)
+    context.quiz_api = TestAPI()
     context.quiz_player = ConsolePlayer()
     context.quiz_game = QuizGame(context.quiz_api, context.quiz_player)
 

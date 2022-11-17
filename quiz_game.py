@@ -1,7 +1,7 @@
 import requests
 
-QUIZ_URL = "https://bjornkjellgren.se/quiz/v2/questions"
-
+QUIZ_URL = "http://bjornkjellgren.se/quiz/v2/questions"
+proxies = {"http": "http://localhost:8500"}
 
 class Answer:
     answer: str
@@ -79,7 +79,7 @@ class QuizAPI(BaseAPI):
         self.url = url
 
     def get_questions(self) -> list[Question]:
-        questions = requests.get(self.url).json()['questions']
+        questions = requests.get(self.url, proxies=proxies, headers={"Accept-Encoding":"identity"}).json()['questions']
         return [self._parse_question(q) for q in questions]
 
     def post_answer(self, question: Question, correct: bool):
